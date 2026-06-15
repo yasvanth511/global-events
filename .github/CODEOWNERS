@@ -1,0 +1,7 @@
+# Repository owner and default reviewer.
+* @yasvanth511
+
+# Changes to repository controls require owner review.
+/.github/ @yasvanth511
+/SECURITY.md @yasvanth511
+/GOVERNANCE.md @yasvanth511
