@@ -75,6 +75,8 @@ cell for sorting and date filtering.
 - Search across all useful event fields.
 - Filter by city, state, country, organization, and date.
 - Sort by event date or event name.
+- Hide events that have already finished (judged by the event's end date, so
+  ongoing multi-day/month ranges stay visible; unparseable dates are kept).
 - Show the result count and a clear-filters action.
 - Paginate the filtered results (page size 12/24/48/All, prev/next, page indicator).
 - Show useful empty, loading, and error states.
