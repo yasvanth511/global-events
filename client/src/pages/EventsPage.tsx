@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import type { EventRecord } from "../types";
 import { fetchEvents } from "../lib/api";
 import { applyFilters, distinctValues, EMPTY_CRITERIA, type FilterCriteria } from "../lib/filtering";
+import { isUpcoming } from "../lib/dates";
 import {
   clampPage,
   DEFAULT_PAGE_SIZE,
@@ -38,17 +39,20 @@ export default function EventsPage() {
     void load();
   }, []);
 
+  // Past events are hidden from the whole catalog (cards, filter options, counts).
+  const upcoming = useMemo(() => events.filter((e) => isUpcoming(e.eventDate)), [events]);
+
   const options = useMemo(
     () => ({
-      cities: distinctValues(events, "city"),
-      states: distinctValues(events, "state"),
-      countries: distinctValues(events, "country"),
-      orgs: distinctValues(events, "eventOrgSchool"),
+      cities: distinctValues(upcoming, "city"),
+      states: distinctValues(upcoming, "state"),
+      countries: distinctValues(upcoming, "country"),
+      orgs: distinctValues(upcoming, "eventOrgSchool"),
     }),
-    [events],
+    [upcoming],
   );
 
-  const filtered = useMemo(() => applyFilters(events, criteria), [events, criteria]);
+  const filtered = useMemo(() => applyFilters(upcoming, criteria), [upcoming, criteria]);
 
   // Reset to the first page whenever the result set or page size changes.
   useEffect(() => {
@@ -102,13 +106,31 @@ export default function EventsPage() {
     );
   }
 
+  if (upcoming.length === 0) {
+    return (
+      <div className="rounded-lg border border-dashed border-slate-300 bg-white py-16 text-center">
+        <h1 className="text-lg font-semibold text-slate-900">No upcoming events</h1>
+        <p className="mx-auto mt-2 max-w-md text-sm text-slate-600">
+          Every event in the active dataset has already finished. Upload a workbook with current
+          events to populate the catalog.
+        </p>
+        <Link
+          to="/upload"
+          className="mt-5 inline-flex items-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"
+        >
+          Upload a workbook
+        </Link>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-5">
       <Filters
         criteria={criteria}
         options={options}
         resultCount={filtered.length}
-        totalCount={events.length}
+        totalCount={upcoming.length}
         onChange={patch}
         onClear={() => setCriteria(EMPTY_CRITERIA)}
       />
