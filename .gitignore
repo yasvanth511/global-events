@@ -8,3 +8,5 @@ data/active.meta.json
 # Local scratch / pre-existing tooling artifacts (not part of the app)
 .codex-spreadsheet-work/
 outputs/
+
+.vercel

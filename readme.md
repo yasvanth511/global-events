@@ -76,10 +76,11 @@ cell for sorting and date filtering.
 - Filter by city, state, country, organization, and date.
 - Sort by event date or event name.
 - Show the result count and a clear-filters action.
+- Paginate the filtered results (page size 12/24/48/All, prev/next, page indicator).
 - Show useful empty, loading, and error states.
 
-The supplied workbook is small, so filtering and sorting should happen in the
-browser. Pagination is not required.
+The supplied workbook is small, so filtering, sorting, and pagination all happen
+in the browser over the filtered result set (no server-side paging).
 
 ## Proposed Stack
 
@@ -214,8 +215,8 @@ storage, which is out of scope for this MVP).
 
 This build does not include authentication, a database, schema mapping,
 multiple datasets, event editing, a separate event-details page, cloud
-storage, pagination, or deployment automation. (Local Docker packaging is
-provided above for convenience; cloud deployment is still out of scope.)
+storage, or deployment automation. (Local Docker packaging is provided above
+for convenience; cloud deployment is still out of scope.)
 
 ## Related Documents
 

@@ -3,8 +3,16 @@ import { Link } from "react-router-dom";
 import type { EventRecord } from "../types";
 import { fetchEvents } from "../lib/api";
 import { applyFilters, distinctValues, EMPTY_CRITERIA, type FilterCriteria } from "../lib/filtering";
+import {
+  clampPage,
+  DEFAULT_PAGE_SIZE,
+  getPageCount,
+  getPageSlice,
+  type PageSize,
+} from "../lib/pagination";
 import EventCard from "../components/EventCard";
 import Filters from "../components/Filters";
+import Pagination from "../components/Pagination";
 
 type LoadState = "loading" | "error" | "ready";
 
@@ -12,6 +20,8 @@ export default function EventsPage() {
   const [state, setState] = useState<LoadState>("loading");
   const [events, setEvents] = useState<EventRecord[]>([]);
   const [criteria, setCriteria] = useState<FilterCriteria>(EMPTY_CRITERIA);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState<PageSize>(DEFAULT_PAGE_SIZE);
 
   async function load() {
     setState("loading");
@@ -39,6 +49,18 @@ export default function EventsPage() {
   );
 
   const filtered = useMemo(() => applyFilters(events, criteria), [events, criteria]);
+
+  // Reset to the first page whenever the result set or page size changes.
+  useEffect(() => {
+    setPage(1);
+  }, [criteria, pageSize]);
+
+  const pageCount = getPageCount(filtered.length, pageSize);
+  const currentPage = clampPage(page, pageCount);
+  const pageItems = useMemo(
+    () => getPageSlice(filtered, currentPage, pageSize),
+    [filtered, currentPage, pageSize],
+  );
 
   function patch(update: Partial<FilterCriteria>) {
     setCriteria((prev) => ({ ...prev, ...update }));
@@ -103,11 +125,21 @@ export default function EventsPage() {
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((event) => (
-            <EventCard key={event.id} event={event} />
-          ))}
-        </div>
+        <>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {pageItems.map((event) => (
+              <EventCard key={event.id} event={event} />
+            ))}
+          </div>
+          <Pagination
+            page={currentPage}
+            pageCount={pageCount}
+            pageSize={pageSize}
+            total={filtered.length}
+            onPageChange={setPage}
+            onPageSizeChange={setPageSize}
+          />
+        </>
       )}
     </div>
   );
