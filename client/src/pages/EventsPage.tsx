@@ -47,7 +47,6 @@ export default function EventsPage() {
       cities: distinctValues(upcoming, "city"),
       states: distinctValues(upcoming, "state"),
       countries: distinctValues(upcoming, "country"),
-      orgs: distinctValues(upcoming, "eventOrgSchool"),
       months: distinctMonths(upcoming),
     }),
     [upcoming],
