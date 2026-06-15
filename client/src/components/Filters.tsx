@@ -1,4 +1,6 @@
 import type { FilterCriteria, SortOption } from "../lib/filtering";
+import type { OrgType } from "../lib/orgType";
+import { ORG_TYPE_LABELS } from "../lib/orgType";
 import { monthLabel } from "../lib/dates";
 
 type Options = {
@@ -81,6 +83,22 @@ export default function Filters({ criteria, options, resultCount, totalCount, on
           onChange={(v) => onChange({ country: v })}
         />
         <SelectFilter id="org" label="Organization/School" value={criteria.org} options={options.orgs} onChange={(v) => onChange({ org: v })} />
+
+        <div>
+          <label htmlFor="orgType" className={labelClass}>
+            Type
+          </label>
+          <select
+            id="orgType"
+            className={selectClass}
+            value={criteria.orgType}
+            onChange={(e) => onChange({ orgType: e.target.value as "" | OrgType })}
+          >
+            <option value="">All</option>
+            <option value="academic">{ORG_TYPE_LABELS.academic}</option>
+            <option value="community">{ORG_TYPE_LABELS.community}</option>
+          </select>
+        </div>
 
         <div>
           <label htmlFor="month" className={labelClass}>
