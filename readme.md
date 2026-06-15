@@ -76,8 +76,6 @@ cell for sorting and date filtering.
 - Filter by city, state, country, month, and organizer type — Academic vs
   Professional, derived from the organizer text (other organizers show under All).
 - Sort by event date or event name.
-- Hide events that have already finished (judged by the event's end date, so
-  ongoing multi-day/month ranges stay visible; unparseable dates are kept).
 - Colour each card by how soon it starts (red ≤7 days → orange → amber → lime →
   green 30+ days) with a relative-time badge, for an at-a-glance sense of urgency.
 - Show the result count and a clear-filters action.
