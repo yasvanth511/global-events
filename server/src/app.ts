@@ -14,6 +14,7 @@ import {
 } from "./storage.js";
 
 const MAX_UPLOAD_BYTES = 10 * 1024 * 1024; // 10 MB
+const GENERAL_RATE_LIMIT = 500;
 const UPLOAD_RATE_LIMIT = 20;
 const UPLOAD_RATE_WINDOW_MS = 15 * 60 * 1000;
 
@@ -30,6 +31,15 @@ const uploadFieldsSchema = z.object({
 
 export function createApp(): Express {
   const app = express();
+
+  app.use(
+    rateLimit({
+      windowMs: UPLOAD_RATE_WINDOW_MS,
+      limit: GENERAL_RATE_LIMIT,
+      standardHeaders: "draft-8",
+      legacyHeaders: false,
+    }),
+  );
 
   const uploadRateLimiter = rateLimit({
     windowMs: UPLOAD_RATE_WINDOW_MS,
