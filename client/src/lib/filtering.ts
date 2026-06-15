@@ -1,4 +1,5 @@
 import type { EventRecord } from "../types";
+import { classifyOrg, type OrgType } from "./orgType";
 
 export type SortOption = "date-asc" | "date-desc" | "name-asc" | "name-desc";
 
@@ -8,6 +9,7 @@ export type FilterCriteria = {
   state: string;
   country: string;
   org: string;
+  orgType: "" | OrgType; // "" = all, "academic" or "community"
   month: string; // YYYY-MM, or "" for all months
   sort: SortOption;
 };
@@ -18,6 +20,7 @@ export const EMPTY_CRITERIA: FilterCriteria = {
   state: "",
   country: "",
   org: "",
+  orgType: "",
   month: "",
   sort: "date-asc",
 };
@@ -49,6 +52,7 @@ function matches(event: EventRecord, criteria: FilterCriteria): boolean {
   if (criteria.state && event.state !== criteria.state) return false;
   if (criteria.country && event.country !== criteria.country) return false;
   if (criteria.org && event.eventOrgSchool !== criteria.org) return false;
+  if (criteria.orgType && classifyOrg(event) !== criteria.orgType) return false;
 
   // Month filter uses the parsed start date's month; events without one are
   // excluded only when a month is selected.

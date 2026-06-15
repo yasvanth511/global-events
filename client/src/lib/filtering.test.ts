@@ -88,6 +88,15 @@ describe("applyFilters", () => {
   it("returns no results when filters exclude everything", () => {
     expect(applyFilters(events, criteria({ city: "Chicago" }))).toHaveLength(0);
   });
+
+  it("filters by organizer type (academic vs community)", () => {
+    const set = [
+      makeEvent({ eventName: "Open House", eventOrgSchool: "Hope College" }),
+      makeEvent({ eventName: "Chess Night", eventOrgSchool: "Downtown Chess Club" }),
+    ];
+    expect(applyFilters(set, criteria({ orgType: "academic" })).map((e) => e.eventName)).toEqual(["Open House"]);
+    expect(applyFilters(set, criteria({ orgType: "community" })).map((e) => e.eventName)).toEqual(["Chess Night"]);
+  });
 });
 
 describe("distinctValues", () => {
