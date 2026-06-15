@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import type { EventRecord } from "../types";
 import { fetchEvents } from "../lib/api";
-import { applyFilters, distinctValues, EMPTY_CRITERIA, type FilterCriteria } from "../lib/filtering";
+import { applyFilters, distinctMonths, distinctValues, EMPTY_CRITERIA, type FilterCriteria } from "../lib/filtering";
 import { isUpcoming } from "../lib/dates";
 import {
   clampPage,
@@ -48,6 +48,7 @@ export default function EventsPage() {
       states: distinctValues(upcoming, "state"),
       countries: distinctValues(upcoming, "country"),
       orgs: distinctValues(upcoming, "eventOrgSchool"),
+      months: distinctMonths(upcoming),
     }),
     [upcoming],
   );

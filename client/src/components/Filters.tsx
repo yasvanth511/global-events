@@ -1,10 +1,12 @@
 import type { FilterCriteria, SortOption } from "../lib/filtering";
+import { monthLabel } from "../lib/dates";
 
 type Options = {
   cities: string[];
   states: string[];
   countries: string[];
   orgs: string[];
+  months: string[];
 };
 
 type Props = {
@@ -81,28 +83,22 @@ export default function Filters({ criteria, options, resultCount, totalCount, on
         <SelectFilter id="org" label="Organization/School" value={criteria.org} options={options.orgs} onChange={(v) => onChange({ org: v })} />
 
         <div>
-          <label htmlFor="dateFrom" className={labelClass}>
-            Date from
+          <label htmlFor="month" className={labelClass}>
+            Month
           </label>
-          <input
-            id="dateFrom"
-            type="date"
-            className={inputClass}
-            value={criteria.dateFrom}
-            onChange={(e) => onChange({ dateFrom: e.target.value })}
-          />
-        </div>
-        <div>
-          <label htmlFor="dateTo" className={labelClass}>
-            Date to
-          </label>
-          <input
-            id="dateTo"
-            type="date"
-            className={inputClass}
-            value={criteria.dateTo}
-            onChange={(e) => onChange({ dateTo: e.target.value })}
-          />
+          <select
+            id="month"
+            className={selectClass}
+            value={criteria.month}
+            onChange={(e) => onChange({ month: e.target.value })}
+          >
+            <option value="">All</option>
+            {options.months.map((month) => (
+              <option key={month} value={month}>
+                {monthLabel(month)}
+              </option>
+            ))}
+          </select>
         </div>
         <div>
           <label htmlFor="sort" className={labelClass}>

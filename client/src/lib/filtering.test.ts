@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { applyFilters, distinctValues, EMPTY_CRITERIA, type FilterCriteria } from "./filtering";
+import { applyFilters, distinctMonths, distinctValues, EMPTY_CRITERIA, type FilterCriteria } from "./filtering";
 import type { EventRecord } from "../types";
 
 function makeEvent(overrides: Partial<EventRecord>): EventRecord {
@@ -68,10 +68,13 @@ describe("applyFilters", () => {
     expect(result[0].eventName).toBe("Summer Camp");
   });
 
-  it("filters by date range using the parsed start date", () => {
-    const result = applyFilters(events, criteria({ dateFrom: "2026-06-15", dateTo: "2026-07-31" }));
-    // Default sort is date ascending: Music Session (06-30) precedes Summer Camp (07-06).
-    expect(result.map((e) => e.eventName)).toEqual(["Music Session", "Summer Camp"]);
+  it("filters by month using the parsed start date", () => {
+    // June: Campus Tour (06-12) and Music Session (06-30), date-ascending.
+    const june = applyFilters(events, criteria({ month: "2026-06" }));
+    expect(june.map((e) => e.eventName)).toEqual(["Campus Tour", "Music Session"]);
+
+    const july = applyFilters(events, criteria({ month: "2026-07" }));
+    expect(july.map((e) => e.eventName)).toEqual(["Summer Camp"]);
   });
 
   it("sorts by date ascending and name", () => {
@@ -96,5 +99,16 @@ describe("distinctValues", () => {
   it("omits null values from options", () => {
     const withNulls = [...events, makeEvent({ city: null })];
     expect(distinctValues(withNulls, "city")).toEqual(["Cleveland", "Grand Rapids"]);
+  });
+});
+
+describe("distinctMonths", () => {
+  it("returns sorted, de-duplicated YYYY-MM start months", () => {
+    expect(distinctMonths(events)).toEqual(["2026-06", "2026-07"]);
+  });
+
+  it("ignores events without a parsed start date", () => {
+    const withNull = [...events, makeEvent({ startDate: null })];
+    expect(distinctMonths(withNull)).toEqual(["2026-06", "2026-07"]);
   });
 });
