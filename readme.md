@@ -73,8 +73,8 @@ cell for sorting and date filtering.
 - Show event name, date, time, organization, location, contact details, and URL
   when those values are available.
 - Search across all useful event fields.
-- Filter by city, state, country, organization, month, and organizer type
-  (academic institution vs club/org/community, derived from the organizer text).
+- Filter by city, state, country, month, and organizer type — Academic vs
+  Professional, derived from the organizer text (other organizers show under All).
 - Sort by event date or event name.
 - Hide events that have already finished (judged by the event's end date, so
   ongoing multi-day/month ranges stay visible; unparseable dates are kept).
