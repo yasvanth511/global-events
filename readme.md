@@ -186,6 +186,30 @@ at `/app/data`, so uploads persist across container restarts. On first run the
 container seeds `data/active.xlsx` from the bundled reference workbook (74
 events).
 
+## Deploy to Vercel
+
+The repo is Vercel-ready via [`vercel.json`](./vercel.json):
+
+- The client is built to `client/dist` and served as a static SPA.
+- The Express API runs as a single serverless function ([`api/index.mjs`](./api/index.mjs),
+  which re-exports the built server). `/api/*` is rewritten to that function;
+  all other paths fall back to `index.html` for client-side routing.
+
+Deploy by importing the GitHub repo at https://vercel.com/new (no extra
+settings needed), or with the CLI:
+
+```bash
+npm i -g vercel
+vercel --prod
+```
+
+**Serverless data note:** Vercel function filesystems are read-only apart from a
+temporary directory. The event catalog always works because it falls back to the
+bundled reference workbook (74 events). Upload validation/preview also works, but
+a confirmed replacement is written to a temp dir and is **not durable** across
+cold starts — durable uploads need the local/Docker run above (or external
+storage, which is out of scope for this MVP).
+
 ## Local Boundaries
 
 This build does not include authentication, a database, schema mapping,
