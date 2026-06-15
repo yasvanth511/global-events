@@ -1,0 +1,16 @@
+services:
+  global-events:
+    build: .
+    image: global-events:local
+    container_name: global-events
+    ports:
+      - "3001:3001"
+    environment:
+      PORT: "3001"
+    volumes:
+      # Persist the active workbook (and metadata) across container restarts.
+      - global-events-data:/app/data
+    restart: unless-stopped
+
+volumes:
+  global-events-data:
