@@ -8,8 +8,7 @@ export type FilterCriteria = {
   state: string;
   country: string;
   org: string;
-  dateFrom: string;
-  dateTo: string;
+  month: string; // YYYY-MM, or "" for all months
   sort: SortOption;
 };
 
@@ -19,8 +18,7 @@ export const EMPTY_CRITERIA: FilterCriteria = {
   state: "",
   country: "",
   org: "",
-  dateFrom: "",
-  dateTo: "",
+  month: "",
   sort: "date-asc",
 };
 
@@ -52,13 +50,10 @@ function matches(event: EventRecord, criteria: FilterCriteria): boolean {
   if (criteria.country && event.country !== criteria.country) return false;
   if (criteria.org && event.eventOrgSchool !== criteria.org) return false;
 
-  // Date filters use the parsed start date; events without one are excluded
-  // only when a date bound is active.
-  if (criteria.dateFrom) {
-    if (!event.startDate || event.startDate < criteria.dateFrom) return false;
-  }
-  if (criteria.dateTo) {
-    if (!event.startDate || event.startDate > criteria.dateTo) return false;
+  // Month filter uses the parsed start date's month; events without one are
+  // excluded only when a month is selected.
+  if (criteria.month) {
+    if (!event.startDate || event.startDate.slice(0, 7) !== criteria.month) return false;
   }
 
   return true;
@@ -98,4 +93,13 @@ export function distinctValues(events: EventRecord[], key: keyof EventRecord): s
     if (typeof value === "string" && value.trim() !== "") set.add(value);
   }
   return [...set].sort((a, b) => a.localeCompare(b));
+}
+
+/** Distinct YYYY-MM start months present in the events, chronologically sorted. */
+export function distinctMonths(events: EventRecord[]): string[] {
+  const set = new Set<string>();
+  for (const event of events) {
+    if (event.startDate) set.add(event.startDate.slice(0, 7));
+  }
+  return [...set].sort();
 }
