@@ -17,15 +17,21 @@ const REPO_ROOT = path.resolve(__dirname, "..", "..");
  *      not durable across cold starts.
  *   3. <repoRoot>/data for normal local/Docker runs (durable).
  */
-const DATA_DIR = process.env.GLOBAL_EVENTS_DATA_DIR
-  ? path.resolve(process.env.GLOBAL_EVENTS_DATA_DIR)
-  : process.env.VERCEL
-    ? path.join(os.tmpdir(), "global-events-data")
-    : path.join(REPO_ROOT, "data");
+const DATA_DIR = resolveDataDir();
 const ACTIVE_FILE = path.join(DATA_DIR, "active.xlsx");
 const META_FILE = path.join(DATA_DIR, "active.meta.json");
 const REFERENCE_FILE = path.join(REPO_ROOT, "technical_events_normalized.xlsx");
 const REFERENCE_NAME = "technical_events_normalized.xlsx";
+
+function resolveDataDir(): string {
+  if (process.env.GLOBAL_EVENTS_DATA_DIR) {
+    return path.resolve(process.env.GLOBAL_EVENTS_DATA_DIR);
+  }
+  if (process.env.VERCEL) {
+    return fs.mkdtempSync(path.join(os.tmpdir(), "global-events-data-"));
+  }
+  return path.join(REPO_ROOT, "data");
+}
 
 /**
  * Location of the built client (used to serve the SPA from the API process in
@@ -51,14 +57,16 @@ export function hasActiveDataset(): boolean {
 export function seedActiveDataset(): void {
   try {
     fs.mkdirSync(DATA_DIR, { recursive: true });
-    if (fs.existsSync(ACTIVE_FILE)) return;
-    if (!fs.existsSync(REFERENCE_FILE)) return;
-
     const buffer = fs.readFileSync(REFERENCE_FILE);
     const parsed = parseWorkbook(buffer);
     if (!parsed.ok) return;
 
-    fs.writeFileSync(ACTIVE_FILE, buffer);
+    try {
+      fs.copyFileSync(REFERENCE_FILE, ACTIVE_FILE, fs.constants.COPYFILE_EXCL);
+    } catch (error) {
+      if (isNodeError(error) && error.code === "EEXIST") return;
+      throw error;
+    }
     writeMeta({
       originalName: REFERENCE_NAME,
       updatedAt: new Date().toISOString(),
@@ -72,9 +80,7 @@ export function seedActiveDataset(): void {
 /** Atomically replace the active workbook after validation has already passed. */
 export function replaceActiveDataset(buffer: Buffer, originalName: string, eventCount: number): ActiveMeta {
   fs.mkdirSync(DATA_DIR, { recursive: true });
-  const tmp = `${ACTIVE_FILE}.tmp`;
-  fs.writeFileSync(tmp, buffer);
-  fs.renameSync(tmp, ACTIVE_FILE);
+  atomicWriteFile(ACTIVE_FILE, buffer);
 
   const meta: ActiveMeta = {
     originalName: safeOriginalName(originalName),
@@ -138,7 +144,23 @@ function buildMeta(source: ActiveSource, fallbackCount: number): ActiveMeta {
 }
 
 function writeMeta(meta: ActiveMeta): void {
-  fs.writeFileSync(META_FILE, JSON.stringify(meta, null, 2));
+  atomicWriteFile(META_FILE, JSON.stringify(meta, null, 2));
+}
+
+function atomicWriteFile(target: string, data: Buffer | string): void {
+  const temporaryDirectory = fs.mkdtempSync(path.join(DATA_DIR, ".write-"));
+  const temporaryFile = path.join(temporaryDirectory, path.basename(target));
+
+  try {
+    fs.writeFileSync(temporaryFile, data, { flag: "wx", mode: 0o600 });
+    fs.renameSync(temporaryFile, target);
+  } finally {
+    fs.rmSync(temporaryDirectory, { recursive: true, force: true });
+  }
+}
+
+function isNodeError(error: unknown): error is NodeJS.ErrnoException {
+  return error instanceof Error && "code" in error;
 }
 
 /** Never trust an uploaded filename as a path; keep only a clean base name for display. */

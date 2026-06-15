@@ -102,9 +102,32 @@ describe("POST /api/upload", () => {
     expect(events.body.meta.fileName).toBe("replacement.xlsx");
   });
 
+  it("removes temporary write directories after replacement", () => {
+    const leftovers = fs
+      .readdirSync(tmpDir, { withFileTypes: true })
+      .filter((entry) => entry.isDirectory() && entry.name.startsWith(".write-"));
+
+    expect(leftovers).toHaveLength(0);
+  });
+
   it("seedActiveDataset keeps an existing active file intact", () => {
     const before = fs.readFileSync(activeFile);
     seedActiveDataset();
     expect(fs.readFileSync(activeFile).equals(before)).toBe(true);
+  });
+
+  it("rate limits repeated upload attempts", async () => {
+    const limitedApp = createApp();
+
+    for (let attempt = 0; attempt < 20; attempt += 1) {
+      const response = await request(limitedApp).post("/api/upload");
+      expect(response.status).toBe(400);
+    }
+
+    const blocked = await request(limitedApp).post("/api/upload");
+    expect(blocked.status).toBe(429);
+    expect(blocked.body.errors).toContain(
+      "Too many upload attempts. Please wait before trying again.",
+    );
   });
 });

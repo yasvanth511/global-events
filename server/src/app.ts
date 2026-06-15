@@ -2,6 +2,7 @@ import path from "node:path";
 import fs from "node:fs";
 import express, { type Express } from "express";
 import multer from "multer";
+import { rateLimit } from "express-rate-limit";
 import { z } from "zod";
 import { parseWorkbook } from "./workbook.js";
 import {
@@ -13,6 +14,8 @@ import {
 } from "./storage.js";
 
 const MAX_UPLOAD_BYTES = 10 * 1024 * 1024; // 10 MB
+const UPLOAD_RATE_LIMIT = 20;
+const UPLOAD_RATE_WINDOW_MS = 15 * 60 * 1000;
 
 const XLSX_MIME = new Set([
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -27,6 +30,19 @@ const uploadFieldsSchema = z.object({
 
 export function createApp(): Express {
   const app = express();
+
+  const uploadRateLimiter = rateLimit({
+    windowMs: UPLOAD_RATE_WINDOW_MS,
+    limit: UPLOAD_RATE_LIMIT,
+    standardHeaders: "draft-8",
+    legacyHeaders: false,
+    handler: (_req, res) => {
+      res.status(429).json({
+        ok: false,
+        errors: ["Too many upload attempts. Please wait before trying again."],
+      });
+    },
+  });
 
   const upload = multer({
     storage: multer.memoryStorage(),
@@ -67,7 +83,7 @@ export function createApp(): Express {
     });
   });
 
-  app.post("/api/upload", (req, res) => {
+  app.post("/api/upload", uploadRateLimiter, (req, res) => {
     upload.single("file")(req, res, (err) => {
       if (err) {
         const message =
