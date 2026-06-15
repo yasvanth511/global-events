@@ -1,4 +1,5 @@
 import type { EventRecord } from "../types";
+import { getUrgency, URGENCY_STYLES } from "../lib/urgency";
 
 /** Only allow http(s) links to be rendered as anchors (blocks javascript:, etc.). */
 function safeHttpUrl(raw: string): string | null {
@@ -50,10 +51,25 @@ export default function EventCard({ event }: { event: EventRecord }) {
   const emails = event.contactEmail ? splitMulti(event.contactEmail) : [];
   const hasContact = event.contactPerson || phones.length > 0 || emails.length > 0;
 
+  // Background colour and a relative-time badge convey how soon the event is.
+  const urgency = getUrgency(event.startDate);
+  const styles = URGENCY_STYLES[urgency.level];
+
   return (
-    <article className="flex h-full flex-col gap-3 rounded-lg border border-slate-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md">
+    <article
+      className={`flex h-full flex-col gap-3 rounded-lg border p-4 shadow-sm transition-shadow hover:shadow-md ${styles.card}`}
+    >
       <div className="space-y-1">
-        <h2 className="text-base font-semibold leading-snug text-slate-900">{event.eventName}</h2>
+        <div className="flex items-start justify-between gap-2">
+          <h2 className="text-base font-semibold leading-snug text-slate-900">{event.eventName}</h2>
+          {urgency.label && (
+            <span
+              className={`shrink-0 whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-semibold ${styles.badge}`}
+            >
+              {urgency.label}
+            </span>
+          )}
+        </div>
         <DateTimeLine event={event} />
         {event.eventOrgSchool && (
           <p className="text-sm text-slate-700">{event.eventOrgSchool}</p>
